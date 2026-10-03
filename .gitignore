@@ -1,3 +1,23 @@
 /out/
 /extract
 *.corpus.jsonl
+
+# Sensei runtime state (mirrors globulario/sensei-code's .gitignore, which
+# explains each entry): machine-local engine state, the local store, per-checkout
+# proof artifacts rewritten by every build, the revision-bound claims file,
+# task execution ledgers, and failed or locked reconstruction attempts.
+/.sensei-code/
+/.sensei/data/
+/.sensei/graph-authority.json
+/.sensei/graph-authority.transaction.tsv
+/.sensei/graph-closure-report.json
+/.sensei/graph-publication-receipt.json
+/.sensei/briefing-delivery.jsonl
+# The reconstructed project slice is regenerable from the revision it names and
+# records absolute local paths; sensei-code commits none of it either.
+/.sensei/project/
+/.sensei/.project-staging-*/
+/.sensei/project-invalid-*/
+/.sensei/project.lock
+/.sensei/tasks/
+index.scip

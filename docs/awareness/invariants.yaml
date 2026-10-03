@@ -1,0 +1,142 @@
+# Invariants — architectural rules that must always hold.
+#
+# Each invariant encodes a rule your codebase depends on. When someone
+# (human or AI) edits a file protected by an invariant, the awareness
+# briefing surfaces it before the edit is made.
+#
+# Start with your most painful past bugs. If it broke once and the fix
+# was non-obvious, it belongs here.
+#
+# Schema:
+#   id:                  unique.dotted.identifier (snake_case)
+#   title:               short human description
+#   severity:            critical | high | medium | low
+#   status:              active | deprecated | review_only
+#   protects.files:      list of file paths this invariant applies to
+#   protects.symbols:    list of function/type names (optional)
+#   forbidden_fixes:     patterns that look correct but are known-broken
+#   required_tests:      tests that must pass when touching protected files
+#   related_failure_modes: links to failure_modes.yaml entries
+
+invariants:
+
+# Example — copy and adapt when you add your first real rule:
+#  - id: example.config_must_not_use_env_vars
+#    title: Service configuration must come from the config store, not environment variables
+#    severity: high
+#    status: active
+#    protects:
+#      files:
+#        - path/to/real/config_loader.go
+#      symbols:
+#        - LoadConfig
+#    forbidden_fixes:
+#      - add_env_var_fallback_for_convenience
+#    required_tests:
+#      - path/to/config_test.go:TestConfigLoaderRejectsEnvVars
+#    related_failure_modes:
+#      - config.env_var_overrides_production_setting
+
+  # Constitutional laws of sensei-prior (DESIGN.md §1-§3a, §10), authored at
+  # bootstrap per architect ruling 01 (2026-10-03). Benchmark choices
+  # (Recall@k, cohorts, tokenizer) are deliberately NOT invariants yet.
+
+  - id: sensei_prior.advisory_output_has_no_authority
+    title: Learned or derived output is advisory only and sensei-prior never writes to any source it reads
+    severity: critical
+    status: active
+    repo: github.com/globulario/sensei-prior
+    domain: repo
+    description: "Everything sensei-prior emits is a suggestion, risk or context; no output is a decision, finding, evidence, attestation, grant or claim that an invariant holds, and no conversion from an advisory type to an authority type exists. Sources (session ledgers, archive, graph) are opened read-only. Only the read-only half is mechanically witnessed today; the import-boundary half belongs in sensei-code once the advisory types land there (DESIGN.md §1)."
+    protects:
+      files:
+        - DESIGN.md
+        - internal/corpus/record.go
+        - internal/events/events.go
+        - internal/extract/census.go
+    required_tests:
+      - internal/extract/extract_test.go:TestWalkDoesNotModifySources
+
+  - id: sensei_prior.records_are_point_in_time
+    title: A record used as decision-point context contains only what was available at that decision point
+    severity: critical
+    status: active
+    repo: github.com/globulario/sensei-prior
+    domain: repo
+    description: "Future commits, later reviews, later rulings, later-derived anchors and end-of-episode facts (outcome, terminal, candidate commit, followed_by_accept) must not appear in the AsOf view of a record. A graph snapshot is the graph that was served then, never today's graph queried about yesterday; an unnameable snapshot stays UNRECONSTRUCTABLE (DESIGN.md §2)."
+    protects:
+      files:
+        - internal/corpus/record.go
+        - internal/extract/extract.go
+    required_tests:
+      - internal/extract/extract_test.go:TestAsOfExcludesLaterFacts
+      - internal/extract/extract_test.go:TestUnknownReceiptGraphStaysUnreconstructable
+
+  - id: sensei_prior.observation_is_not_promoted_to_interpretation
+    title: Extraction records what sources say, never what they mean, and never promotes a finding label
+    severity: critical
+    status: active
+    repo: github.com/globulario/sensei-prior
+    domain: repo
+    description: "Every reviewer finding extracts as reviewer_observation unless an explicit lifecycle record says otherwise; a later ACCEPT is recorded as followed_by_accept, never as finding_resolved. Objective sections are matched by membership in a closed vocabulary with unrecognized headers listed; ruling references carry no interpretation (DESIGN.md §3, §3a)."
+    protects:
+      files:
+        - internal/extract/extract.go
+        - internal/extract/text.go
+    required_tests:
+      - internal/extract/extract_test.go:TestFindingsAreNeverPromoted
+      - internal/extract/extract_test.go:TestAcceptOfSameCandidateIsNotFollowedByAccept
+      - internal/extract/text_test.go:TestStructureRecognizesSectionsByMembership
+      - internal/extract/text_test.go:TestRulingReferencesCarryNoInterpretation
+
+  - id: sensei_prior.private_corpus_is_never_committed
+    title: No historical corpus or derived artifact is a repository artifact
+    severity: critical
+    status: active
+    repo: github.com/globulario/sensei-prior
+    domain: repo
+    description: "The repository is public; the corpus is not. corpus.jsonl, census.json, snapshots, episodes, training splits, review packages, frozen targets and checkpoints are written only to caller-supplied directories outside the repository. Only fabricated fixtures under testdata/synthetic/ may carry corpus-shaped files (DESIGN.md §10)."
+    protects:
+      files:
+        - .gitignore
+        - internal/repoguard/guard_test.go
+        - cmd/extract/main.go
+        - testdata/synthetic/
+    required_tests:
+      - internal/repoguard/guard_test.go:TestNoCorpusIsTracked
+      - internal/repoguard/guard_test.go:TestGuardDetectsEachForbiddenShape
+
+  - id: sensei_prior.ambiguity_is_preserved
+    title: When sources disagree or are absent the record says so instead of choosing
+    severity: high
+    status: active
+    repo: github.com/globulario/sensei-prior
+    domain: repo
+    description: "Disagreeing objective labels yield AMBIGUOUS with every claim kept and no value; labels are compared verbatim (43b is not 43). An unidentifiable source is an excluded subject with its reason, never a silent skip. A completed run without an accepting final review is not ACCEPT (DESIGN.md §3a)."
+    protects:
+      files:
+        - internal/archive/archive.go
+        - internal/extract/extract.go
+        - internal/extract/census.go
+    required_tests:
+      - internal/archive/archive_test.go:TestObjectiveNumberNeverChoosesBetweenSources
+      - internal/archive/archive_test.go:TestUnidentifiableRunsAreExcludedWithReasons
+      - internal/extract/extract_test.go:TestCompletedWithoutAcceptingReviewIsNotAccepted
+      - internal/extract/extract_test.go:TestCensusListsEveryExcludedSubject
+
+  - id: sensei_prior.two_clocks_remain_distinct
+    title: When a fact became available is never merged with when the thing it describes happened
+    severity: high
+    status: active
+    repo: github.com/globulario/sensei-prior
+    domain: repo
+    description: "available_at is when the text stating a fact existed; describes_time is when the described thing happened, left unset when the source does not state it. Era membership carries only the precision its dated basis has: episodes within a day of a boundary are marked boundary_day (DESIGN.md §2, §3a)."
+    protects:
+      files:
+        - internal/corpus/record.go
+        - internal/extract/text.go
+        - internal/archive/era.go
+    required_tests:
+      - internal/extract/text_test.go:TestRulingReferencesCarryNoInterpretation
+      - internal/archive/archive_test.go:TestEraOf
+      - internal/archive/archive_test.go:TestEraBasisIsVerifiedAgainstTheArchive

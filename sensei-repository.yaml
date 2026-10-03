@@ -1,0 +1,16 @@
+# Canonical repository identity.
+#
+# Declares WHICH REPOSITORY this corpus and its source files belong to. It is
+# the identity every SourceFile graph subject is scoped to, so that two
+# repositories' README.md files mint different subjects instead of collapsing
+# onto one.
+#
+# Committed on purpose: .sensei/config.yaml carries the same value for a local
+# checkout, but .sensei/ is gitignored runtime state, so a fresh clone would
+# carry no identity at all. Identity has to travel with the repository.
+#
+# Not the publication domain: `sensei build --repo <domain>` selects a
+# publication scope, which may be aliased or rebound; a file's repository does
+# not change when it is published somewhere else.
+repository:
+  domain: github.com/globulario/sensei-prior
