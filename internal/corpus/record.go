@@ -71,6 +71,8 @@ type Finding struct {
 	Claim      string     `json:"claim"`
 	Reference  string     `json:"reference,omitempty"`
 	Reason     string     `json:"reason,omitempty"`
+	Correction string     `json:"correction,omitempty"`
+	ProofGap   string     `json:"proof_gap,omitempty"`
 	LabelState LabelState `json:"label_state"`
 	// FollowedByAccept records that a later review of a different candidate in
 	// the same episode accepted. It is an observation, not a promotion of

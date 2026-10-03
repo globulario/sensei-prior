@@ -109,12 +109,14 @@ func fromEvents(path string, evs []events.Event) (corpus.Record, error) {
 					GraphBuildCommit string `json:"graph_build_commit"`
 				} `json:"provenance"`
 				Findings []struct {
-					ID        string `json:"id"`
-					Severity  string `json:"severity"`
-					Class     string `json:"class"`
-					Claim     string `json:"claim"`
-					Reference string `json:"reference"`
-					Reason    string `json:"reason"`
+					ID         string `json:"id"`
+					Severity   string `json:"severity"`
+					Class      string `json:"class"`
+					Claim      string `json:"claim"`
+					Reference  string `json:"reference"`
+					Reason     string `json:"reason"`
+					Correction string `json:"correction"`
+					ProofGap   string `json:"proof_gap"`
 				} `json:"findings"`
 			}
 			if err := json.Unmarshal(e.Payload, &v); err != nil || v.Decision == "" {
@@ -129,6 +131,7 @@ func fromEvents(path string, evs []events.Event) (corpus.Record, error) {
 				rv.Findings = append(rv.Findings, corpus.Finding{
 					ID: f.ID, Severity: f.Severity, Class: f.Class, Claim: f.Claim,
 					Reference: f.Reference, Reason: f.Reason,
+					Correction: f.Correction, ProofGap: f.ProofGap,
 					// No finding lifecycle exists in the ledger (DESIGN.md §9):
 					// every finding is an observation and is never promoted.
 					LabelState: corpus.ReviewerObservation,

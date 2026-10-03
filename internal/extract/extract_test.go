@@ -18,7 +18,7 @@ const (
 	lStub      = `{"id":"e2","time":"2026-09-19T15:47:01Z","session_id":"s1","task_id":"task-1","kind":"agent.started","summary":"stub-architect started","payload":null}`
 	lReal      = `{"id":"e2","time":"2026-09-19T15:47:01Z","session_id":"s1","task_id":"task-1","kind":"agent.started","summary":"Claude started","payload":null}`
 	lPlan      = `{"id":"e3","time":"2026-09-19T15:47:04Z","session_id":"s1","task_id":"task-1","kind":"plan.proposed","summary":"append one comment line","payload":{"plan_source":"architect","summary":"append one comment line","files":["internal/report/report.go"],"mode":"modify","decision":"proceed"}}`
-	lRevise    = `{"id":"e4","time":"2026-09-19T15:47:56Z","session_id":"s1","task_id":"task-1","kind":"review.completed","summary":"REVISE","payload":{"decision":"revise","provenance":{"provider":"chatgpt","candidate_digest":"d027","graph_build_commit":"05feaf64"},"findings":[{"id":"1","severity":"blocking","claim":"the change is not proven","reference":"internal/report/report.go","reason":"no witness"}]}}`
+	lRevise    = `{"id":"e4","time":"2026-09-19T15:47:56Z","session_id":"s1","task_id":"task-1","kind":"review.completed","summary":"REVISE","payload":{"decision":"revise","provenance":{"provider":"chatgpt","candidate_digest":"d027","graph_build_commit":"05feaf64"},"findings":[{"id":"1","severity":"blocking","claim":"the change is not proven","reference":"internal/report/report.go","reason":"no witness","correction":"add a witness test","proof_gap":"no test names report.go"}]}}`
 	lAccept    = `{"id":"e5","time":"2026-09-19T15:48:28Z","session_id":"s1","task_id":"task-1","kind":"review.completed","summary":"ACCEPT","payload":{"decision":"accept","provenance":{"provider":"chatgpt","candidate_digest":"a698","graph_build_commit":"05feaf64"},"findings":[]}}`
 	lReceipt   = `{"id":"e6","time":"2026-09-19T15:48:29Z","session_id":"s1","task_id":"task-1","kind":"run.receipt","summary":"receipt","payload":{"receipt":{"base_commit":{"text":"3b07f93d","state":"KNOWN"},"graph_digest":{"text":"d1934697","state":"KNOWN"},"candidate_commit":{"text":"b5eaff9f","state":"KNOWN"}}}}`
 	lDone      = `{"id":"e7","time":"2026-09-19T15:48:30Z","session_id":"s1","task_id":"task-1","kind":"workflow.completed","summary":"done","payload":{}}`
@@ -78,6 +78,9 @@ func TestFindingsAreNeverPromoted(t *testing.T) {
 	f := r.Reviews[0].Findings[0]
 	if f.LabelState != corpus.ReviewerObservation {
 		t.Fatalf("label_state = %s, want %s", f.LabelState, corpus.ReviewerObservation)
+	}
+	if f.Correction != "add a witness test" || f.ProofGap != "no test names report.go" {
+		t.Fatalf("correction/proof_gap not extracted: %+v", f)
 	}
 	if !f.FollowedByAccept {
 		t.Fatal("followed_by_accept not recorded for a finding a later candidate's review accepted")
