@@ -164,7 +164,7 @@ func TestCensusListsEveryExcludedSubject(t *testing.T) {
 		t.Fatal(err)
 	}
 	var emitted int
-	c, err := Walk(root, func(corpus.Record) error { emitted++; return nil })
+	c, err := Walk(root, nil, func(corpus.Record) error { emitted++; return nil })
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -189,7 +189,7 @@ func TestWalkDoesNotModifySources(t *testing.T) {
 	root := t.TempDir()
 	path := writeSession(t, root, "s1", lCreated, lRevise, lAccept, lReceipt, lDone)
 	before, beforeInfo := digest(t, path)
-	if _, err := Walk(root, func(corpus.Record) error { return nil }); err != nil {
+	if _, err := Walk(root, nil, func(corpus.Record) error { return nil }); err != nil {
 		t.Fatal(err)
 	}
 	after, afterInfo := digest(t, path)

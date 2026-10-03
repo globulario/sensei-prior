@@ -1,0 +1,2 @@
+task task-synthetic-1  session session-synthetic-1
+{"id":"s1","time":"2026-01-10T12:00:00Z","session_id":"session-synthetic-1","task_id":"task-synthetic-1","kind":"task.created","summary":"OBJECTIVE 7 - SYNTHETIC:\nLAW: a widget is counted once.\nMEASURED SPECIMEN:\nthe widget counter double-counted.\nW1 SINGLE COUNT:\ncount one widget, expect one.\nRULING NOTE: ruling 3 applies.","payload":null}

@@ -1,0 +1,2 @@
+task task-synthetic-lost  session session-synthetic-lost
+{"id":"x","time":"2026-01-20T00:00:00Z","session_id":"session-synthetic-lost","task_id":"task-synthetic-lost","kind":"task.created","summary":"lost","payload":null}

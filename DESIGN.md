@@ -44,6 +44,12 @@ implementation is wrong.
   graph-derived context. It is never filled from a later graph.
 - Every field carries the time it became available. The extractor refuses to
   place a fact in a record whose `available_at` is earlier than the fact's.
+- **Two clocks.** A fact's `available_at` (when the text stating it existed) is
+  not its `describes_time` (when the thing it describes happened). Objective 67
+  can describe a specimen from objective 61, but that description did not exist
+  during objective 61. A record carries both clocks where both are known, never
+  merges them, and leaves `describes_time` unset when the source does not
+  state it.
 - The live served store is not a historical source. It is known to have
   drifted from main (115 commits behind on 2026-09-16), so it can be neither
   current nor historical truth.
@@ -65,13 +71,42 @@ lifecycle, and a label's strength comes from that lifecycle:
 | `finding_superseded`   | overtaken by a later contract or ruling                   |
 
 The strongest positive label is `finding_resolved`: upheld, change made, later
-ACCEPT. A withdrawn finding is evidence *against* its claim. The extractor never
+ACCEPT. It is never inferred. In particular, `followed_by_accept` (a later
+candidate's review accepted) does not promote a finding to `finding_resolved`,
+because nothing in it shows the finding was upheld or that the change answered
+it. Lifecycle states come from explicit lifecycle records. The intended source
+is Sensei emitting `finding.upheld`, `finding.resolved`, `finding.withdrawn` and
+`finding.superseded` itself. Extracting them from prose such as issue comments
+is out of scope unless a machine-checkable predicate is stated first. A withdrawn finding is evidence *against* its claim. The extractor never
 collapses these states. When the lifecycle cannot be determined, the state is
 `reviewer_observation`, never promoted.
 
 Failures are first-class. `REVISE → REVISE → ACCEPT` trajectories and
 non-convergent objectives stay in the corpus, because the transformation from a
 rejected structure to an accepted one is the signal a critic needs.
+
+## 3a. Observation, not interpretation
+
+Stage 0 records what the sources physically say and never what they mean:
+
+- **Objective structure** lists the sections an objective's text contains,
+  matched against a closed vocabulary, with a locator and digest for each.
+  Header-like lines outside the vocabulary are listed as unrecognized. Whether
+  an objective with `WITNESSES` converges faster is a later question, not
+  something to build into extraction.
+- **Era** places an episode by date under a dated constitution change in the
+  archive. It is historical context, not quality: an earlier-era episode is
+  true history under the rules of its day. Each era's basis is a verbatim
+  archive line, re-verified on every run. Because basis dates carry no time
+  zone, episodes within a day of a boundary are marked `boundary_day`.
+- **Ruling references** record that an objective cites ruling N. What ruling N
+  means, or which closure-matrix cell it belongs to, is an interpretation, and
+  interpretations are not derived without a stated predicate. The
+  knowledge-normal-form vocabulary is not a label set.
+- **Objective numbers** come only from explicit statements: the archive's
+  run-file names and an `OBJECTIVE N` line in the objective text. They are kept
+  verbatim (`43b` is not `43`). Sources that disagree yield `AMBIGUOUS`, and no
+  source yields `ABSENT`. Nothing is chosen.
 
 ## 4. Deterministic first
 
@@ -91,6 +126,13 @@ code and recorded with every benchmark run.
   before any retrieval runs, and those targets are frozen with a digest.
   Retrieval volume is not transfer: surfacing related material without the
   target is a miss.
+- **Transfer and discovery law.** A transfer or discovery mechanism gets no
+  credit for retrieving related information. It is credited only for surfacing
+  preregistered governing material that was available at the decision point
+  and that the benchmark identifies as having mattered. (Scar, 2026-09-02: a
+  derivation family produced 41/41 true facts and no useful transfer. In three
+  preregistered defects, the governing law was already anchored to the
+  defective file, so retrieval was not the bottleneck.)
 - **Temporal holdout, never random splits.** Train on objectives before T1,
   validate on [T1, T2), test on [T2, T3). The graph itself improves over time,
   so a random split leaks later repairs into earlier answers.
@@ -161,6 +203,13 @@ to this repository.
 | `~/.sensei/graph/<store>/generations/<marker>/` | the graph generation a run was served, by marker digest | metadata and per-file digests only, **no triples** |
 | `git show <commit>:docs/awareness/**` | the authored graph source at any commit | rebuilding triples needs the builder at the run's `graph_build_commit` |
 | GitHub `globulario/sensei-code#157` | numbered rulings | not on disk; out of scope for Stage 0 v1 |
+| objectives archive `run-*.jsonl` (Stage 0b) | run file ↔ task identity, via the file's header line and its first event | its events are a strict subset of the session ledgers, so only the identity is read |
+| objectives archive `00-README.md`, `PATTERN.md`, `STRATEGY.md` | dated era boundaries | each basis line is re-verified on load |
+
+Objective structure and ruling references are read from the ledger's
+`task.created` text, not from the archive's objective files. The archive files
+were edited after submission (`.bak-*` copies exist), so their content has no
+trustworthy `available_at`. The submitted text does.
 
 Not sources: `.sensei-code/tasks/*.json` and `candidates/*.json` are snapshots
 overwritten in place, so they are current state, not history. The live
@@ -194,3 +243,21 @@ Oxigraph store holds only the present graph.
   exclusions, never silently skipped.
 - **The corpus is never committed.** Objective text quotes rulings and
   internal detail. Extracted output goes to a gitignored directory.
+
+## 10. Public mechanism, private memory
+
+The repository is public. The corpus is not.
+
+| public (committed) | private (generated, never committed) |
+|--------------------|--------------------------------------|
+| extractor, schemas, compiler, benchmark and evaluation code, `DESIGN.md`, aggregate results | `corpus.jsonl`, `census.json`, graph snapshots, objective and ruling text, episodes, train/validation/test instances, any model checkpoint that encodes corpus material |
+
+> No historical corpus is a repository artifact.
+
+Enforced by `internal/repoguard`: a test fails if any tracked or trackable path
+has a corpus shape (`out/`, `corpus/`, `snapshots/`, `training/` at the root;
+`corpus.jsonl`, `census.json`, `*.corpus.jsonl`, `*.episode.jsonl`,
+`*.checkpoint`, `events.jsonl`, `run-*.jsonl` anywhere), except fabricated
+fixtures under `testdata/synthetic/`. A census published as an aggregate
+result contains counts only; its subject list names private sessions and stays
+private.

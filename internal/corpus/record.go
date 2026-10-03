@@ -119,6 +119,14 @@ type Record struct {
 	Terminal        string        `json:"terminal,omitempty"` // the raw terminal event kind
 	Synthetic       Synthetic     `json:"synthetic"`
 	Provenance      []Provenance  `json:"provenance"`
+
+	// Stage 0b: the authored layer (DESIGN.md §9).
+	ObjectiveNumber    ObjectiveNumber    `json:"objective_number"`
+	DFLabels           []string           `json:"df_labels"`
+	ArchiveRuns        []string           `json:"archive_runs"`
+	ObjectiveStructure ObjectiveStructure `json:"objective_structure"`
+	Era                *EraMembership     `json:"era,omitempty"` // nil without an archive
+	RulingReferences   []RulingReference  `json:"ruling_references"`
 }
 
 // AsOf returns the record as it could have been known at t: every plan,
@@ -156,4 +164,66 @@ func (r Record) AsOf(t time.Time) Record {
 	out.Terminal = ""
 	out.CandidateCommit = ""
 	return out
+}
+
+// IdentityState says whether a join key is established. AMBIGUOUS is data:
+// sources disagreed and none was chosen.
+type IdentityState string
+
+const (
+	IdentityKnown     IdentityState = "KNOWN"
+	IdentityAmbiguous IdentityState = "AMBIGUOUS"
+	IdentityAbsent    IdentityState = "ABSENT"
+)
+
+// LabelClaim is one source stating a label, with the rule that read it.
+type LabelClaim struct {
+	Value      string     `json:"value"`
+	Predicate  string     `json:"predicate"`
+	Provenance Provenance `json:"provenance"`
+}
+
+// ObjectiveNumber is the archive's objective label for an episode, verbatim.
+// Value is set only when State is KNOWN.
+type ObjectiveNumber struct {
+	State  IdentityState `json:"state"`
+	Value  string        `json:"value,omitempty"`
+	Claims []LabelClaim  `json:"claims"`
+}
+
+// Section is one recognized section header in the objective text.
+type Section struct {
+	Kind    string `json:"kind"`
+	Header  string `json:"header"`
+	Locator string `json:"locator"`
+	Digest  string `json:"digest"` // sha256 of the header line through the next header
+}
+
+// ObjectiveStructure is what the objective text physically contains. It is not
+// a quality judgment.
+type ObjectiveStructure struct {
+	Sections     []Section `json:"sections"`
+	Unrecognized []string  `json:"unrecognized"` // header-like lines outside the vocabulary
+}
+
+// EraMembership places an episode under the constitution of its day. It is
+// historical context, never a quality grade.
+type EraMembership struct {
+	ID          string      `json:"id"`
+	BoundaryDay bool        `json:"boundary_day"`
+	Basis       *Provenance `json:"basis,omitempty"`
+}
+
+// RulingReference is a citation of a numbered ruling. It carries no
+// interpretation of the ruling. AvailableAt is when the citing text existed;
+// DescribesTime, when known, is when the ruling itself was made. The two
+// clocks differ and must not be merged (DESIGN.md §2).
+type RulingReference struct {
+	Ruling        int        `json:"ruling"`
+	Form          string     `json:"form"` // the text as written, e.g. "RULING-112"
+	Mentions      int        `json:"mentions"`
+	Predicate     string     `json:"predicate"`
+	AvailableAt   time.Time  `json:"available_at"`
+	DescribesTime *time.Time `json:"describes_time,omitempty"`
+	Provenance    Provenance `json:"provenance"`
 }
