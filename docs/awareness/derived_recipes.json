@@ -1,0 +1,21 @@
+{
+  "recipes": [
+    {
+      "kind": "state_mutation_confined_to_owner",
+      "dir": "internal/extract",
+      "type": "Census",
+      "field": "Subjects",
+      "search_paths": [
+        "internal",
+        "cmd"
+      ],
+      "why": "Stage 1A extends subject-backed census classification, and the current source makes Census.Subjects the list from which counts are derived; mechanically checking mutation ownership would anchor the relevant extractor/census region.",
+      "provenance": {
+        "origin_task": "task-1791057207456793023",
+        "origin_gap": "graph coverage is absent for the planned files: no direct anchors and no examined files — task-only request without graph evidence",
+        "written_at": "2026-10-03T20:11:14Z",
+        "written_by": "closure_round"
+      }
+    }
+  ]
+}
