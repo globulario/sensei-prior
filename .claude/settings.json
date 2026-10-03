@@ -11,12 +11,12 @@
           },
           {
             "type": "command",
-            "command": "AWG_ADDR=localhost:10125 AWG_DOMAIN=github.com/globulario/sensei-prior .claude/hooks/edit-check-guard.sh",
+            "command": "AWG_DOMAIN=github.com/globulario/sensei-prior .claude/hooks/edit-check-guard.sh",
             "timeout": 10
           },
           {
             "type": "command",
-            "command": "AWG_ADDR=localhost:10125 AWG_DOMAIN=github.com/globulario/sensei-prior .claude/hooks/push-briefing.sh",
+            "command": "AWG_DOMAIN=github.com/globulario/sensei-prior .claude/hooks/push-briefing.sh",
             "timeout": 10
           }
         ]
