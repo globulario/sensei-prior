@@ -68,6 +68,7 @@ invariants:
       files:
         - internal/corpus/record.go
         - internal/extract/extract.go
+        - BENCHMARK.md
     required_tests:
       - internal/extract/extract_test.go:TestAsOfExcludesLaterFacts
       - internal/extract/extract_test.go:TestUnknownReceiptGraphStaysUnreconstructable
@@ -83,6 +84,7 @@ invariants:
       files:
         - internal/extract/extract.go
         - internal/extract/text.go
+        - BENCHMARK.md
     required_tests:
       - internal/extract/extract_test.go:TestFindingsAreNeverPromoted
       - internal/extract/extract_test.go:TestAcceptOfSameCandidateIsNotFollowedByAccept
@@ -102,6 +104,7 @@ invariants:
         - internal/repoguard/guard_test.go
         - cmd/extract/main.go
         - testdata/synthetic/
+        - BENCHMARK.md
     required_tests:
       - internal/repoguard/guard_test.go:TestNoCorpusIsTracked
       - internal/repoguard/guard_test.go:TestGuardDetectsEachForbiddenShape
@@ -118,6 +121,7 @@ invariants:
         - internal/archive/archive.go
         - internal/extract/extract.go
         - internal/extract/census.go
+        - BENCHMARK.md
     required_tests:
       - internal/archive/archive_test.go:TestObjectiveNumberNeverChoosesBetweenSources
       - internal/archive/archive_test.go:TestUnidentifiableRunsAreExcludedWithReasons
